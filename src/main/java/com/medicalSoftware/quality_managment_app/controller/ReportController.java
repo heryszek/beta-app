@@ -13,43 +13,31 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/reports")
 public class ReportController {
+
     @Autowired
     private ReportService reportService;
-    @Autowired
-    private AdverseEventService adverseEventService;
 
-    @GetMapping("/pdf")
-    public ResponseEntity<InputStreamResource> downloadPdfReport() {
-        List<AdverseEvent> adverseEvents = adverseEventService.findAll();
-        ByteArrayInputStream bis = reportService.generatePdfReport(adverseEvents);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Disposition", "inline; filename=adverse-events-report.pdf");
-
-        return ResponseEntity
-                .ok()
-                .headers(headers)
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(new InputStreamResource(bis));
+    @GetMapping("/report/pdf")
+    public ResponseEntity<byte[]> getPdfReport() throws IOException {
+        byte[] pdfReport = reportService.generatePdfReport();
+        return ResponseEntity.ok()
+                             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=report.pdf")
+                             .contentType(MediaType.APPLICATION_PDF)
+                             .body(pdfReport);
     }
 
-    @GetMapping("/excel")
-    public ResponseEntity<InputStreamResource> downloadExcelReport() {
-        List<AdverseEvent> adverseEvents = adverseEventService.findAll();
-        ByteArrayInputStream bis = reportService.generateExcelReport(adverseEvents);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Disposition", "inline; filename=adverse-events-report.xlsx");
-
-        return ResponseEntity
-                .ok()
-                .headers(headers)
-                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-                .body(new InputStreamResource(bis));
+    @GetMapping("/report/excel")
+    public ResponseEntity<byte[]> getExcelReport() throws IOException {
+        byte[] excelReport = reportService.generateExcelReport();
+        return ResponseEntity.ok()
+                             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=report.xlsx")
+                             .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                             .body(excelReport);
     }
 }
+
